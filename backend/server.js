@@ -8,12 +8,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 👇 health check
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
+
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/customers", require("./routes/customerRoutes"));
 
-// Connect DB (no app.listen)
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error(err));
 
-module.exports = app;   // 👈 THIS IS REQUIRED
+if (process.env.NODE_ENV !== "production") {
+  app.listen(5000, () => {
+    console.log("Backend running on http://localhost:5000");
+  });
+}
+
+module.exports = app;
