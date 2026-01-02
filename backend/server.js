@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 👇 health check
+// health check
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
@@ -21,7 +21,7 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error(err));
 
-if (process.env.NODE_ENV !== "production") {
+if (!process.env.VERCEL) {
   app.listen(5000, () => {
     console.log("Backend running on http://localhost:5000");
   });
