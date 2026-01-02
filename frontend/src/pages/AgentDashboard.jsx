@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React,{ useState } from "react";
 import CustomerTable from "../components/CustomerTable";
 import CustomerForm from "../components/CustomerForm";
 import DashboardStats from "../components/DashboardStats";

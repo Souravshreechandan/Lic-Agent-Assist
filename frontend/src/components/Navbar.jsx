@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
+
 
 export default function Navbar({ setPage, onLogout }) {
   const [open, setOpen] = useState(false);
