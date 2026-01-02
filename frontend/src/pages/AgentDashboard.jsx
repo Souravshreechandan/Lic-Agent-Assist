@@ -18,14 +18,19 @@ export default function AgentDashboard() {
     setOpenModal(true);
   };
 
+  // add / edit success
   const onSuccess = () => {
     setOpenModal(false);
-    setRefreshKey((k) => k + 1);
+    setRefreshKey(k => k + 1);
+  };
+
+  // 🔥 DELETE SUCCESS → THIS UPDATES STATS
+  const onDeleteSuccess = () => {
+    setRefreshKey(k => k + 1);
   };
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Agent Dashboard</h1>
 
@@ -37,22 +42,20 @@ export default function AgentDashboard() {
         </button>
       </div>
 
-      {/* DASHBOARD STATS */}
+      {/* STATS */}
       <DashboardStats refreshKey={refreshKey} />
 
-      {/* CUSTOMER TABLE */}
+      {/* TABLE */}
       <CustomerTable
         onEdit={openEdit}
         refreshKey={refreshKey}
+        onDeleteSuccess={onDeleteSuccess}
       />
 
       {/* MODAL */}
       {openModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center
-                        bg-black/30 backdrop-blur-sm">
-          <div className="bg-white/90 w-full max-w-2xl rounded-xl
-                          shadow-lg p-6 relative">
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white w-full max-w-2xl rounded-xl p-6 relative">
             <button
               onClick={() => setOpenModal(false)}
               className="absolute top-3 right-3 text-xl"
