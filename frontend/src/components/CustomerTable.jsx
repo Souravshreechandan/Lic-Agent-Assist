@@ -72,13 +72,15 @@ export default function CustomerTable({
                 <td className="p-2 border space-x-2">
                   <button
                     onClick={() => onEdit(c)}
-                    className="bg-yellow-500 text-white px-2 py-1 rounded"
+                    className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium 
+                    px-3 py-1.5 rounded-lg transition duration-200 shadow-sm hover:shadow"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => deleteCustomer(c._id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
+                    className="bg-red-500 hover:bg-red-600 text-white text-xs font-medium 
+                    px-3 py-1.5 rounded-lg transition duration-200 shadow-sm hover:shadow"
                   >
                     Delete
                   </button>

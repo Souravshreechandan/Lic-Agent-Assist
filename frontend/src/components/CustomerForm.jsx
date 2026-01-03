@@ -1,4 +1,4 @@
-import React,{ useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../services/api";
 
 const POLICY_OPTIONS = [
@@ -27,10 +27,10 @@ export default function CustomerForm({ editData, onSuccess }) {
     name: "",
     dob: "",
     policyNumber: "",
-    policyName: "",
+    policyName: "Dont Know",
     premiumAmount: "",
-    paymentFrequency: "",
-    paymentType: ""
+    paymentFrequency: "Quarterly",
+    paymentType: "Offline"
   });
 
   useEffect(() => {
@@ -39,10 +39,10 @@ export default function CustomerForm({ editData, onSuccess }) {
         name: editData.name,
         dob: editData.dob?.slice(0, 10),
         policyNumber: editData.policyNumber,
-        policyName: editData.policyName,
+        policyName: editData.policyName || "Dont Know",
         premiumAmount: editData.premiumAmount,
         paymentFrequency: editData.paymentFrequency,
-        paymentType: editData.paymentType
+        paymentType: editData.paymentType || "Offline"
       });
     }
   }, [editData]);
@@ -57,15 +57,20 @@ export default function CustomerForm({ editData, onSuccess }) {
   };
 
   return (
-    <>
-      <h2 className="text-xl font-semibold mb-4">
-        {editData ? "Edit Customer" : "Add Customer"}
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+      {editData ? "Edit Customer" : "Add Customer"}
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* CUSTOMER NAME */}
         <input
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           placeholder="Customer Name"
           value={form.name}
           onChange={(e) =>
@@ -76,7 +81,11 @@ export default function CustomerForm({ editData, onSuccess }) {
         {/* DOB */}
         <input
           type="date"
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           value={form.dob}
           onChange={(e) =>
             setForm({ ...form, dob: e.target.value })
@@ -85,7 +94,11 @@ export default function CustomerForm({ editData, onSuccess }) {
 
         {/* POLICY NUMBER */}
         <input
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           placeholder="Policy Number"
           value={form.policyNumber}
           onChange={(e) =>
@@ -93,9 +106,13 @@ export default function CustomerForm({ editData, onSuccess }) {
           }
         />
 
-        {/* POLICY NAME DROPDOWN */}
+        {/* POLICY NAME */}
         <select
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm bg-white
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           value={form.policyName}
           onChange={(e) =>
             setForm({ ...form, policyName: e.target.value })
@@ -112,7 +129,11 @@ export default function CustomerForm({ editData, onSuccess }) {
         {/* PREMIUM */}
         <input
           type="number"
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           placeholder="Premium Amount"
           value={form.premiumAmount}
           onChange={(e) =>
@@ -122,13 +143,16 @@ export default function CustomerForm({ editData, onSuccess }) {
 
         {/* PAYMENT FREQUENCY */}
         <select
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm bg-white
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           value={form.paymentFrequency}
           onChange={(e) =>
             setForm({ ...form, paymentFrequency: e.target.value })
           }
         >
-          <option value="">Payment Frequency</option>
           <option value="Monthly">Monthly</option>
           <option value="Quarterly">Quarterly</option>
           <option value="Half-Yearly">Half-Yearly</option>
@@ -137,25 +161,35 @@ export default function CustomerForm({ editData, onSuccess }) {
 
         {/* PAYMENT TYPE */}
         <select
-          className="border p-2 rounded"
+          className="
+            w-full border border-gray-300 rounded-lg
+            px-3 py-2 text-sm bg-white
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+          "
           value={form.paymentType}
           onChange={(e) =>
             setForm({ ...form, paymentType: e.target.value })
           }
         >
-          <option value="">Payment Type</option>
-          <option value="Online">Online</option>
           <option value="Offline">Offline</option>
+          <option value="Online">Online</option>
         </select>
       </div>
 
       <button
         onClick={submit}
-        className="mt-5 bg-blue-600 hover:bg-blue-700
-                   text-white px-5 py-2 rounded"
+        className="
+          mt-8
+          bg-blue-600 hover:bg-blue-700
+          text-white text-sm font-semibold
+          px-6 py-2.5 rounded-lg
+          transition duration-200
+          shadow-sm hover:shadow-md
+          active:scale-95
+        "
       >
         {editData ? "Update Customer" : "Add Customer"}
       </button>
-    </>
+    </div>
   );
 }

@@ -47,7 +47,8 @@ export default function Auth({ setAuth }) {
         {/* Cancel */}
         <button
           onClick={cancel}
-          className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+          className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-xl 
+          font-semibold transition duration-200"
         >
           ✕
         </button>
@@ -94,7 +95,8 @@ export default function Auth({ setAuth }) {
 
         <button
           onClick={submit}
-          className="bg-blue-600 text-white w-full py-2 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold w-full 
+          py-2.5 rounded-lg transition duration-200 shadow-sm hover:shadow-md active:scale-95"
         >
           {mode === "login" ? "Login" : "Register"}
         </button>
@@ -104,7 +106,8 @@ export default function Auth({ setAuth }) {
             <>
               Don’t have an account?{" "}
               <button
-                className="text-blue-600"
+                className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 
+                hover:underline transition"
                 onClick={() => setMode("register")}
               >
                 Register
@@ -114,7 +117,8 @@ export default function Auth({ setAuth }) {
             <>
               Already have an account?{" "}
               <button
-                className="text-blue-600"
+                className="text-blue-600 hover:text-blue-700 font-medium underline-offset-2 
+                hover:underline transition"
                 onClick={() => setMode("login")}
               >
                 Login

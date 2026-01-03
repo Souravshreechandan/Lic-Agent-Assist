@@ -24,6 +24,7 @@ function App() {
       <Navbar setPage={setPage} onLogout={logout} />
       {page === "home" && <Home setPage={setPage} />}
       {page === "dashboard" && <AgentDashboard />}
+      {page === "addCustomer" && <AgentDashboard autoOpenAdd />}
     </>
   );
 }

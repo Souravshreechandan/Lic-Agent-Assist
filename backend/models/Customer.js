@@ -22,30 +22,30 @@ const customerSchema = new mongoose.Schema({
   },
 
   policyName: {
-  type: String,
-  enum: [
-    "Jeevan Anand",
-    "New Jeevan Anand",
-    "Jeevan Lakshya",
-    "Jeevan Utsav",
-    "Jeevan Labh",
-    "Jeevan Umang",
-    "New Money Back Plan – 20 Years",
-    "New Money Back Plan – 25 Years",
-    "New Children’s Money Back Plan",
-    "Jeevan Tarun",
-    "Aadhaar Stambh",
-    "Aadhaar Shila",
-    "Micro Bachat Plan",
-    "SIIP",
-    "Jeevan Pragati",
-    "Bima Jyoti",
-    "Endowment Plus",
-    "Dont Know",
-  ],
-  required: true
-},
-
+    type: String,
+    enum: [
+      "Jeevan Anand",
+      "New Jeevan Anand",
+      "Jeevan Lakshya",
+      "Jeevan Utsav",
+      "Jeevan Labh",
+      "Jeevan Umang",
+      "New Money Back Plan – 20 Years",
+      "New Money Back Plan – 25 Years",
+      "New Children’s Money Back Plan",
+      "Jeevan Tarun",
+      "Aadhaar Stambh",
+      "Aadhaar Shila",
+      "Micro Bachat Plan",
+      "SIIP",
+      "Jeevan Pragati",
+      "Bima Jyoti",
+      "Endowment Plus",
+      "Dont Know"
+    ],
+    default: "Dont Know",
+    required: true
+  },
 
   premiumAmount: {
     type: Number,
@@ -55,12 +55,14 @@ const customerSchema = new mongoose.Schema({
   paymentFrequency: {
     type: String,
     enum: ["Monthly", "Quarterly", "Half-Yearly", "Yearly"],
+    default: "Quarterly",
     required: true
   },
 
   paymentType: {
     type: String,
     enum: ["Online", "Offline"],
+    default: "Offline",
     required: true
   }
 });

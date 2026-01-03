@@ -1,9 +1,9 @@
-import React,{ useState } from "react";
+import React,{ useState, useEffect } from "react";
 import CustomerTable from "../components/CustomerTable";
 import CustomerForm from "../components/CustomerForm";
 import DashboardStats from "../components/DashboardStats";
 
-export default function AgentDashboard() {
+export default function AgentDashboard({ autoOpenAdd }) {
   const [openModal, setOpenModal] = useState(false);
   const [editCustomer, setEditCustomer] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -17,6 +17,13 @@ export default function AgentDashboard() {
     setEditCustomer(customer);
     setOpenModal(true);
   };
+
+  // 🔥 AUTO OPEN FROM HOME
+  useEffect(() => {
+    if (autoOpenAdd) {
+      openAdd();
+    }
+  }, [autoOpenAdd]);
 
   // add / edit success
   const onSuccess = () => {
@@ -36,7 +43,8 @@ export default function AgentDashboard() {
 
         <button
           onClick={openAdd}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 
+          py-2.5 rounded-lg transition duration-200 shadow-sm hover:shadow-md active:scale-95"
         >
           Add Customer
         </button>

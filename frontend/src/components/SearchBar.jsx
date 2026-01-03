@@ -36,9 +36,16 @@ export default function SearchBar() {
       {/* SEARCH INPUT */}
       <div className="relative">
         <input
-          className="w-full border rounded-xl px-4 py-3 pr-10
-                     focus:outline-none focus:ring-2
-                     focus:ring-blue-500"
+          className="
+            w-full
+            border border-gray-400
+            rounded-full
+            px-4 py-2.5 pr-10
+            text-sm
+            focus:outline-none
+            focus:border-blue-600
+            shadow-sm
+          "
           placeholder="Search customer by name..."
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
@@ -48,8 +55,11 @@ export default function SearchBar() {
         {query && (
           <button
             onClick={clearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2
-                       text-gray-400 hover:text-red-500"
+            className="
+              absolute right-4 top-1/2 -translate-y-1/2
+              text-gray-500 hover:text-red-500
+              text-sm
+            "
           >
             ✕
           </button>
@@ -57,20 +67,31 @@ export default function SearchBar() {
 
         {/* SUGGESTIONS */}
         {suggestions.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white
-                          rounded-xl shadow-lg border">
+          <div
+            className="
+              absolute z-10 w-full mt-1
+              bg-white
+              border border-gray-300
+              rounded-lg
+              overflow-hidden
+            "
+          >
             {suggestions.map((c) => (
               <div
                 key={c._id}
                 onClick={() => selectCustomer(c)}
-                className="px-4 py-2 cursor-pointer
-                           hover:bg-blue-50
-                           border-b last:border-b-0"
+                className="
+                  px-4 py-2
+                  cursor-pointer
+                  hover:bg-gray-100
+                  border-b border-gray-200
+                  last:border-b-0
+                "
               >
-                <p className="font-medium text-gray-800">
+                <p className="text-sm font-medium text-gray-800">
                   {c.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-600">
                   Policy No: {c.policyNumber}
                 </p>
               </div>
