@@ -12,6 +12,7 @@ export default function Auth({ setAuth }) {
 
   const submit = async () => {
     setMessage("");
+    localStorage.removeItem("token");
 
     try {
       if (mode === "register") {
@@ -31,7 +32,7 @@ export default function Auth({ setAuth }) {
         setAuth(true);
       }
     } catch (err) {
-      setMessage(err.response?.data?.message || "Something went wrong");
+      setMessage(err.response?.data?.message || "Invalid email or password");
     }
   };
 
