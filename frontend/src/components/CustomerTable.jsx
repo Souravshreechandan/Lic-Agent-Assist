@@ -13,7 +13,12 @@ export default function CustomerTable({
     const loadCustomers = async () => {
       try {
         const res = await api.get("/customers");
-        setCustomers(res.data);
+
+        const sortedCustomers = res.data.sort((a, b) =>
+        a.name.localeCompare(b.name)
+        );
+        setCustomers(sortedCustomers);
+        
       } catch (err) {
         console.error("Failed to load customers", err);
       }
@@ -63,7 +68,7 @@ export default function CustomerTable({
             {customers.map((c, i) => (
               <tr key={c._id} className="hover:bg-gray-50 text-center">
                 <td className="p-2 border">{i + 1}</td>
-                <td className="p-2 border">{c.name}</td>
+                <td className="p-2 border uppercase">{c.name}</td>
                 <td className="p-2 border">{c.policyNumber}</td>
                 <td className="p-2 border">{c.policyName}</td>
                 <td className="p-2 border">₹{c.premiumAmount}</td>
