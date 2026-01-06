@@ -23,7 +23,7 @@ router.get("/search", auth, async (req, res) => {
   const customers = await Customer.find({
     agentId: req.agentId,
     name: { $regex: q, $options: "i" }
-  }).limit(5);
+  })
   res.json(customers);
 });
 

@@ -2,6 +2,7 @@ import React,{ useState, useEffect } from "react";
 import CustomerTable from "../components/CustomerTable";
 import CustomerForm from "../components/CustomerForm";
 import DashboardStats from "../components/DashboardStats";
+import SearchBar from "../components/SearchBar";
 
 export default function AgentDashboard({ autoOpenAdd }) {
   const [openModal, setOpenModal] = useState(false);
@@ -52,6 +53,9 @@ export default function AgentDashboard({ autoOpenAdd }) {
 
       {/* STATS */}
       <DashboardStats refreshKey={refreshKey} />
+
+      <SearchBar />
+      <br />
 
       {/* TABLE */}
       <CustomerTable
