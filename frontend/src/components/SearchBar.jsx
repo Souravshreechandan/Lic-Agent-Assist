@@ -1,10 +1,11 @@
-import React,{ useState } from "react";
+import React, { useState } from "react";
 import api from "../services/api";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [copied, setCopied] = useState(false); // ✅ added
 
   const handleSearch = async (value) => {
     setQuery(value);
@@ -29,6 +30,13 @@ export default function SearchBar() {
     setQuery("");
     setSuggestions([]);
     setSelectedCustomer(null);
+    setCopied(false);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(selectedCustomer.policyNumber);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -108,7 +116,6 @@ export default function SearchBar() {
               Customer Details
             </h3>
 
-            {/* CLEAR DETAILS */}
             <button
               onClick={clearSearch}
               className="text-sm text-red-500 hover:underline"
@@ -119,28 +126,46 @@ export default function SearchBar() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <Detail label="Name" value={selectedCustomer.name} />
+
             <Detail
               label="Date of Birth"
               value={new Date(
                 selectedCustomer.dob
-              ).toLocaleDateString()}
+              ).toLocaleDateString("en-GB")}
             />
-            <Detail
-              label="Policy Number"
-              value={selectedCustomer.policyNumber}
-            />
+
+            {/* ✅ UPDATED POLICY NUMBER WITH COPY BUTTON */}
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs text-gray-500">Policy Number</p>
+                <p className="font-medium text-gray-800">
+                  {selectedCustomer.policyNumber}
+                </p>
+              </div>
+
+              <button
+                onClick={handleCopy}
+                className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700"
+              >
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
+
             <Detail
               label="Policy Name"
               value={selectedCustomer.policyName}
             />
+
             <Detail
               label="Premium Amount"
               value={`₹${selectedCustomer.premiumAmount}`}
             />
+
             <Detail
               label="Payment Frequency"
               value={selectedCustomer.paymentFrequency}
             />
+
             <Detail
               label="Payment Type"
               value={selectedCustomer.paymentType}
