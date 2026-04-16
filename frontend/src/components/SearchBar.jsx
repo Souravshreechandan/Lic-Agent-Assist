@@ -1,24 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../services/api";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [copied, setCopied] = useState(false); // ✅ added
+  const [copied, setCopied] = useState(false);
 
-  const handleSearch = async (value) => {
-    setQuery(value);
-    setSelectedCustomer(null);
+  // ✅ DEBOUNCE SEARCH (FIXED)
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      if (!query.trim()) {
+        setSuggestions([]);
+        return;
+      }
 
-    if (!value.trim()) {
-      setSuggestions([]);
-      return;
-    }
+      try {
+        const res = await api.get(`/customers/search?q=${query}`);
+        setSuggestions(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
 
-    const res = await api.get(`/customers/search?q=${value}`);
-    setSuggestions(res.data);
-  };
+    return () => clearTimeout(delay);
+  }, [query]);
 
   const selectCustomer = (customer) => {
     setSelectedCustomer(customer);
@@ -56,7 +62,10 @@ export default function SearchBar() {
           "
           placeholder="Search customer by name..."
           value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setSelectedCustomer(null); // clear old selection while typing
+          }}
         />
 
         {/* CLEAR BUTTON */}
@@ -134,7 +143,7 @@ export default function SearchBar() {
               ).toLocaleDateString("en-GB")}
             />
 
-            {/* ✅ UPDATED POLICY NUMBER WITH COPY BUTTON */}
+            {/* POLICY NUMBER WITH COPY */}
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-xs text-gray-500">Policy Number</p>
