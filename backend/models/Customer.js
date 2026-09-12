@@ -1,15 +1,24 @@
+
 const mongoose = require("mongoose");
 
 const customerSchema = new mongoose.Schema(
   {
+    // =========================
+    // AGENT
+    // =========================
     agentId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      ref: "Agent",
     },
 
+    // =========================
+    // CUSTOMER DETAILS
+    // =========================
     name: {
       type: String,
       required: true,
+      trim: true,
     },
 
     dob: {
@@ -17,9 +26,13 @@ const customerSchema = new mongoose.Schema(
       required: true,
     },
 
+    // =========================
+    // POLICY DETAILS
+    // =========================
     policyNumber: {
       type: String,
       required: true,
+      trim: true,
     },
 
     policyName: {
@@ -73,6 +86,17 @@ const customerSchema = new mongoose.Schema(
     },
 
     // =========================
+    // POLICY STATUS
+    // AGENT CONTROLS THIS
+    // =========================
+    policyStatus: {
+      type: String,
+      enum: ["Active", "Lapsed"],
+      default: "Active",
+      required: true,
+    },
+
+    // =========================
     // PAYMENT STATUS
     // =========================
     paymentStatus: {
@@ -93,7 +117,6 @@ const customerSchema = new mongoose.Schema(
 
     // =========================
     // PREVIOUS DUE DATE
-    // Used when Paid -> Pending
     // =========================
     previousDueDate: {
       type: Date,
@@ -113,7 +136,5 @@ const customerSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model(
-  "Customer",
-  customerSchema
-);
+module.exports = mongoose.model("Customer", customerSchema);
+

@@ -1,101 +1,128 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import EditCustomer from "./EditCustomer";
 
-export default function SearchBar() {
+const icons = {
+  search: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 4 4",
+  close: "M18 6 6 18M6 6l12 12",
+  edit: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z",
+  copy: "M9 9h11v11H9zM15 9V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h5",
+  calendar:
+    "M16 3v4M8 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2",
+  document: "M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6",
+  refresh:
+    "M20 11a8 8 0 0 0-14-5L4 8M4 4v4h4M4 13a8 8 0 0 0 14 5l2-2M20 20v-4h-4",
+  card: "M3 5h18v14H3zM3 10h18M7 15h4",
+  check: "m5 12 4 4L19 6",
+  warning: "m12 3 10 18H2L12 3ZM12 9v5M12 17h.01",
+  shield:
+    "M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4",
+  rupee: "M8 5h8M8 9h8M9 5c5 0 5 7 0 7H8l7 7",
+};
+
+function Icon({ name, size = 20 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={icons[name]} />
+    </svg>
+  );
+}
+
+export default function SearchBar({
+  selectedCustomer = null,
+  onCustomerSelect,
+  hideSearch = false,
+}) {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [editCustomer, setEditCustomer] = useState(null);
+  const [results, setResults] = useState([]);
+  const [customer, setCustomer] = useState(null);
+  const [edit, setEdit] = useState(null);
   const [copied, setCopied] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSelected, setIsSelected] = useState(false);
 
-  // SEARCH
   useEffect(() => {
-    if (!query.trim() || isSelected) {
-      setSuggestions([]);
-      setLoading(false);
+    if (selectedCustomer) {
+      setCustomer(selectedCustomer);
+      setQuery(selectedCustomer.name || "");
+      setResults([]);
+    } else if (selectedCustomer === null) {
+      setCustomer(null);
+
+      if (hideSearch) {
+        setQuery("");
+      }
+    }
+  }, [selectedCustomer, hideSearch]);
+
+  useEffect(() => {
+    if (hideSearch || !query.trim() || customer) {
+      setResults([]);
       return;
     }
 
-    const controller = new AbortController();
-
-    const delay = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         setLoading(true);
-        const res = await api.get(
-          `/customers/search?q=${encodeURIComponent(query.trim())}`,
-          { signal: controller.signal }
+
+        const { data } = await api.get(
+          `/customers/search?q=${encodeURIComponent(query.trim())}`
         );
-        setSuggestions(res.data);
-      } catch (err) {
-        if (
-          err.name !== "CanceledError" &&
-          err.name !== "AbortError" &&
-          err.code !== "ERR_CANCELED"
-        ) {
-          console.error("Search error:", err);
-          setSuggestions([]);
-        }
+
+        setResults(data);
+      } catch {
+        setResults([]);
       } finally {
         setLoading(false);
       }
-    }, 100);
+    }, 200);
 
-    return () => {
-      clearTimeout(delay);
-      controller.abort();
-    };
-  }, [query, isSelected]);
+    return () => clearTimeout(timer);
+  }, [query, customer, hideSearch]);
 
-  // SELECT CUSTOMER
-  const selectCustomer = (customer) => {
-    setIsSelected(true);
-    setSelectedCustomer(customer);
-    setSuggestions([]);
-    setQuery(customer.name);
-    setCopied("");
-    setLoading(false);
+  const selectCustomer = (item) => {
+    setCustomer(item);
+    setResults([]);
+    setQuery(item.name || "");
+    onCustomerSelect?.(item);
   };
 
-  // CLEAR
-  const clearSearch = () => {
-    setIsSelected(false);
+  const clear = () => {
     setQuery("");
-    setSuggestions([]);
-    setSelectedCustomer(null);
+    setResults([]);
+    setCustomer(null);
+    setEdit(null);
     setCopied("");
-    setLoading(false);
+    onCustomerSelect?.(null);
   };
 
-  // DOB
-  const getFormattedDOB = () =>
-    selectedCustomer?.dob
-      ? new Date(selectedCustomer.dob).toLocaleDateString("en-GB")
-      : "-";
+  const date = (value) =>
+    value ? new Date(value).toLocaleDateString("en-GB") : "-";
 
-  // DUE DATE
-  const getFormattedDueDate = () =>
-    selectedCustomer?.dueDate
-      ? new Date(selectedCustomer.dueDate).toLocaleDateString("en-GB")
-      : "-";
-
-  // COPY
-  const handleCopy = async (value, type) => {
+  const copy = async (value, type) => {
     if (!value || value === "-") return;
 
     try {
-      await navigator.clipboard.writeText(value.toString());
+      await navigator.clipboard.writeText(String(value));
       setCopied(type);
-      setTimeout(() => setCopied(""), 1500);
-    } catch (err) {
-      console.error("Copy failed:", err);
-    }
+
+      setTimeout(() => setCopied(""), 1200);
+    } catch {}
   };
 
-  // PAY NOW
-  const handlePayNow = () => {
+  const active = customer?.policyStatus !== "Lapsed";
+  const due = Number(customer?.totalDueAmount) || 0;
+
+  const payNow = () => {
     window.open(
       "https://www.amazon.in/apay/interstitial/insurance/LICOB?ref_=apay_interstitial_biller_search_to_form_field_insurance",
       "_blank",
@@ -103,264 +130,280 @@ export default function SearchBar() {
     );
   };
 
-  // TOTAL DUE
-  const getTotalDue = () => {
-    const amount = Number(selectedCustomer?.totalDueAmount);
-    return Number.isFinite(amount) ? amount : 0;
-  };
-
-  // EDIT SUCCESS
-  const handleEditSuccess = () => {
-    setEditCustomer(null);
-    clearSearch();
-  };
-
   return (
-    <div className="max-w-xl mx-auto">
-      {/* SEARCH BOX */}
-      <div className="relative">
-        <input
-          className="w-full border border-gray-400 rounded-full px-4 py-2.5 pr-20 text-sm focus:outline-none focus:border-blue-600 shadow-sm"
-          placeholder="Search customer by name..."
-          value={query}
-          onChange={(e) => {
-            setIsSelected(false);
-            setQuery(e.target.value);
-            setSelectedCustomer(null);
-            setCopied("");
-          }}
-        />
-
-        {loading && query && (
-          <span className="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-            Searching...
-          </span>
-        )}
-
-        {query && !loading && (
-          <button
-            type="button"
-            onClick={clearSearch}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-500 text-sm"
-          >
-            ✕
-          </button>
-        )}
-
-        {/* SUGGESTIONS */}
-        {suggestions.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg overflow-hidden shadow-lg max-h-80 overflow-y-auto">
-            {suggestions.map((customer) => (
-              <div
-                key={customer._id}
-                onClick={() => selectCustomer(customer)}
-                className="px-4 py-2.5 cursor-pointer hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
-              >
-                <p className="text-sm font-medium text-gray-800">
-                  {customer.name}
-                </p>
-                <p className="text-xs text-gray-600">
-                  Policy No: {customer.policyNumber}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* NO RESULTS */}
-        {!loading &&
-          query.trim() &&
-          suggestions.length === 0 &&
-          !selectedCustomer &&
-          !isSelected && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg px-4 py-3 text-sm text-gray-500">
-              No customer found
+    <div className="w-full">
+      {!hideSearch && (
+        <div className="mx-auto max-w-xl">
+          <div className="relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+              <Icon name="search" size={19} />
             </div>
-          )}
-      </div>
 
-      {/* CUSTOMER DETAILS */}
-      {selectedCustomer && (
-        <div className="mt-6 bg-white rounded-2xl shadow-md p-6">
-          {/* HEADER */}
-          <div className="flex justify-between items-center mb-5">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Customer Details
-            </h3>
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCustomer(null);
+                onCustomerSelect?.(null);
+              }}
+              placeholder="Search customer by name..."
+              className="w-full rounded-full border border-gray-300 bg-white py-2.5 pl-11 pr-11 text-sm text-gray-800 shadow-sm outline-none focus:border-blue-500"
+            />
 
-            <div className="flex items-center gap-3">
+            {query && (
               <button
                 type="button"
-                onClick={() => setEditCustomer(selectedCustomer)}
-                className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                onClick={clear}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
+                <Icon name="close" size={17} />
+              </button>
+            )}
+
+            {(loading || results.length > 0 || (query && !customer)) && (
+              <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+                {loading ? (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    Searching...
+                  </div>
+                ) : results.length ? (
+                  results.map((item) => (
+                    <button
+                      type="button"
+                      key={item._id}
+                      onClick={() => selectCustomer(item)}
+                      className="w-full border-b px-4 py-3 text-left last:border-0 hover:bg-gray-50"
+                    >
+                      <p className="text-sm font-medium text-gray-900">
+                        {item.name}
+                      </p>
+
+                      <p className="mt-1 text-xs text-gray-500">
+                        Policy No: {item.policyNumber}
+                      </p>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    No customer found
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {customer && (
+        <div
+          className={`mx-auto ${
+            hideSearch ? "mt-0" : "mt-5"
+          } max-w-6xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm`}
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-white px-6 py-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-xl font-semibold text-blue-600">
+                  {customer.name
+                    ?.split(" ")
+                    .slice(0, 2)
+                    .map((x) => x[0])
+                    .join("")
+                    .toUpperCase()}
+                </div>
+
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    {customer.name}
+                  </h2>
+
+                  <p className="mt-1 text-[15px] text-gray-500">
+                    {customer.policyName || "LIC Policy"}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                className={`rounded-full px-5 py-2 text-sm font-semibold ${
+                  active
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                ● {active ? "Active" : "Lapsed"}
+              </span>
+            </div>
+
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setEdit(customer)}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <Icon name="edit" size={17} />
                 Edit
               </button>
 
               <button
                 type="button"
-                onClick={clearSearch}
-                className="text-sm text-red-500 hover:underline"
+                onClick={clear}
+                className="flex items-center gap-2 rounded-lg border border-red-300 bg-white px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
               >
+                <Icon name="close" size={17} />
                 Clear
               </button>
+
+              <button
+                type="button"
+                onClick={payNow}
+                className="ml-auto flex items-center gap-2 rounded-lg bg-orange-500 px-7 py-2.5 text-sm font-medium text-white hover:bg-orange-600"
+              >
+                <Icon name="card" size={18} />
+                Pay Now
+              </button>
             </div>
           </div>
 
-          {/* DETAILS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <Detail label="Name" value={selectedCustomer.name || "-"} />
-
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs text-gray-500">Date of Birth</p>
-                <p className="font-medium text-gray-800">
-                  {getFormattedDOB()}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleCopy(getFormattedDOB(), "dob")}
-                className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700"
-              >
-                {copied === "dob" ? "Copied!" : "Copy"}
-              </button>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs text-gray-500">Policy Number</p>
-                <p className="font-medium text-gray-800">
-                  {selectedCustomer.policyNumber || "-"}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleCopy(selectedCustomer.policyNumber, "policy")
-                }
-                className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700"
-              >
-                {copied === "policy" ? "Copied!" : "Copy"}
-              </button>
-            </div>
-
-            <Detail
-              label="Policy Name"
-              value={selectedCustomer.policyName || "-"}
+          <div className="grid grid-cols-1 gap-3 p-5 md:grid-cols-3">
+            <Info
+              icon="document"
+              label="Policy Number"
+              value={customer.policyNumber}
+              copy={() => copy(customer.policyNumber, "policy")}
+              copied={copied === "policy"}
             />
 
-            <Detail
+            <Info
+              icon="calendar"
+              label="Date of Birth"
+              value={date(customer.dob)}
+              copy={() => copy(date(customer.dob), "dob")}
+              copied={copied === "dob"}
+            />
+
+            <Info
+              icon="calendar"
+              label="Next Due Date"
+              value={date(customer.dueDate)}
+            />
+
+            <Info
+              icon="document"
+              label="Policy Name"
+              value={customer.policyName}
+            />
+
+            <Info
+              icon="rupee"
               label="Premium Amount"
+              value={`₹${Number(
+                customer.premiumAmount || 0
+              ).toLocaleString("en-IN")}`}
+            />
+
+            <Info
+              icon="refresh"
+              label="Payment Frequency"
+              value={customer.paymentFrequency}
+            />
+
+            <Info
+              icon="card"
+              label="Payment Type"
+              value={customer.paymentType}
+            />
+
+            <Info
+              icon="check"
+              label="Payment Status"
               value={
-                selectedCustomer.premiumAmount !== undefined
-                  ? `₹${Number(selectedCustomer.premiumAmount).toLocaleString(
-                      "en-IN"
-                    )}`
-                  : "-"
+                <Status
+                  text={customer.paymentStatus || "Pending"}
+                  green={customer.paymentStatus === "Paid"}
+                />
               }
             />
 
-            <Detail
-              label="Payment Frequency"
-              value={selectedCustomer.paymentFrequency || "-"}
-            />
-
-            <Detail
-              label="Payment Type"
-              value={selectedCustomer.paymentType || "-"}
-            />
-
-            {/* PAYMENT STATUS */}
-            <div>
-              <p className="text-xs text-gray-500">Payment Status</p>
-              <span
-                className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium ${
-                  selectedCustomer.paymentStatus === "Paid"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {selectedCustomer.paymentStatus || "Pending"}
-              </span>
-            </div>
-
-            <Detail
-              label="Next Due Date"
-              value={getFormattedDueDate()}
-            />
-
-            <Detail
+            <Info
+              icon="warning"
               label="Missed Payments"
               value={
-                selectedCustomer.paymentStatus === "Pending"
-                  ? `${selectedCustomer.missedPaymentPeriods || 0} ${
-                      (selectedCustomer.missedPaymentPeriods || 0) === 1
-                        ? "Payment"
-                        : "Payments"
-                    }`
-                  : "0 Payments"
+                customer.paymentStatus === "Pending"
+                  ? customer.missedPaymentPeriods || 0
+                  : 0
               }
             />
 
-            {/* TOTAL DUE */}
-            <div className="sm:col-span-2 mt-2 p-4 rounded-xl border border-red-200 bg-red-50">
-              <p className="text-xs text-red-600 font-medium">
-                Total Payment Due
-              </p>
+            <Info
+              icon="rupee"
+              label="Total Due Amount"
+              value={`₹${due.toLocaleString("en-IN")}`}
+            />
 
-              <p className="text-2xl font-bold text-red-700 mt-1">
-                ₹{getTotalDue().toLocaleString("en-IN")}
-              </p>
-
-              {selectedCustomer.paymentStatus === "Pending" &&
-                selectedCustomer.missedPaymentPeriods > 0 && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {selectedCustomer.missedPaymentPeriods} unpaid payment
-                    {selectedCustomer.missedPaymentPeriods > 1 ? "s" : ""}
-                  </p>
-                )}
-
-              {selectedCustomer.paymentStatus === "Paid" && (
-                <p className="text-xs text-green-600 mt-1">
-                  No payment due
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* PAY NOW */}
-          <div className="mt-6 pt-5 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handlePayNow}
-              className="w-full bg-orange-500 text-white font-semibold py-3 rounded-xl hover:bg-orange-600 active:scale-[0.98] transition shadow-sm"
-            >
-              Pay Now
-            </button>
+            <Info
+              icon="shield"
+              label="Policy Status"
+              value={
+                <Status
+                  text={active ? "Active" : "Lapsed"}
+                  green={active}
+                />
+              }
+            />
           </div>
         </div>
       )}
 
-      {/* EDIT CUSTOMER */}
-      {editCustomer && (
+      {edit && (
         <EditCustomer
-          customer={editCustomer}
-          onClose={() => setEditCustomer(null)}
-          onSuccess={handleEditSuccess}
+          customer={edit}
+          onClose={() => setEdit(null)}
+          onSuccess={clear}
         />
       )}
     </div>
   );
 }
 
-function Detail({ label, value }) {
+function Info({ icon, label, value, copy, copied }) {
   return (
-    <div>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="font-medium text-gray-800">{value}</p>
+    <div className="flex min-h-[92px] items-center gap-3 rounded-xl border border-blue-50 bg-[#f8fbff] px-4 py-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-gray-700">
+        <Icon name={icon} size={21} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] text-gray-500">{label}</p>
+
+        <div className="mt-1 text-[16px] font-medium text-gray-900">
+          {value || "-"}
+        </div>
+      </div>
+
+      {copy && (
+        <button
+          type="button"
+          onClick={copy}
+          className="rounded-lg border border-gray-200 bg-white p-2 text-gray-500 hover:bg-gray-50"
+        >
+          <Icon name={copied ? "check" : "copy"} size={17} />
+        </button>
+      )}
     </div>
+  );
+}
+
+function Status({ text, green }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+        green
+          ? "bg-green-100 text-green-700"
+          : "bg-red-100 text-red-700"
+      }`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {text}
+    </span>
   );
 }
