@@ -76,6 +76,16 @@ function CloseIcon() {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
+  );
+}
+
 export default function Navbar({
   setPage,
   onLogout,
@@ -86,6 +96,7 @@ export default function Navbar({
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [agent, setAgent] = useState({
     name: "",
@@ -96,6 +107,7 @@ export default function Navbar({
     const fetchAgent = async () => {
       try {
         const { data } = await api.get("/agent/profile");
+
         setAgent({
           name: data.name || "",
           email: data.email || "",
@@ -169,6 +181,19 @@ export default function Navbar({
   const goHome = () => {
     clearSearch();
     setPage("home");
+    setMobileMenuOpen(false);
+  };
+
+  const handleMenuClick = (target) => {
+    if (!target) return;
+
+    setPage(target);
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    setMobileMenuOpen(false);
+    onLogout();
   };
 
   const getInitials = (name) => {
@@ -195,33 +220,22 @@ export default function Navbar({
 
   return (
     <>
-      <header className="fixed left-0 right-0 top-0 z-[100] h-[68px] border-b border-gray-200 bg-white">
-        <div className="flex h-[68px] items-center px-6">
-
+      <header className="fixed left-0 right-0 top-0 z-[100] border-b border-[#263457] bg-[#17213f]">
+        <div className="flex h-[68px] items-center px-4 sm:px-6">
           <button
             type="button"
             onClick={goHome}
-            className="flex shrink-0 items-center gap-3"
+            className="flex shrink-0 items-center"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-sm font-bold text-blue-600">
-              LIC
-            </div>
-
-            <div className="text-left">
-              <p className="text-[16px] font-bold leading-tight text-[#17213f]">
-                LIC Agent
-              </p>
-
-              <p className="text-[11px] text-gray-400">
-                Agent Portal
-              </p>
-            </div>
+            <img
+              src="/lic.svg"
+              alt="LIC"
+              className="h-12 w-auto max-w-[120px] object-contain"
+            />
           </button>
 
           <div className="relative mx-auto hidden w-full max-w-[430px] md:block">
-
-            <div className="flex h-10 items-center rounded-full border border-gray-200 bg-gray-50 px-4 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100">
-
+            <div className="flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-200">
               <SearchIcon />
 
               <input
@@ -244,7 +258,6 @@ export default function Navbar({
 
             {searching && (loading || results.length > 0) && (
               <div className="absolute left-0 right-0 top-12 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-
                 {loading ? (
                   <div className="px-4 py-3 text-sm text-gray-500">
                     Searching...
@@ -267,70 +280,166 @@ export default function Navbar({
                     </button>
                   ))
                 )}
-
               </div>
             )}
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-3">
-
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#17213f] text-xs font-semibold text-white">
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="hidden h-9 w-9 items-center justify-center rounded-full bg-white text-xs font-semibold text-[#17213f] sm:flex">
               {getInitials(agent.name)}
             </div>
 
             <div className="hidden sm:block">
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-white">
                 {agent.name || "LIC Agent"}
               </p>
 
-              <p className="text-[11px] text-gray-500">
+              <p className="text-[11px] text-blue-100">
                 LIC Agent
               </p>
             </div>
 
-            <span className="text-gray-400">⌄</span>
+            <span className="hidden text-blue-100 sm:block">
+              ⌄
+            </span>
+
+            {page === "home" && (
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 md:hidden"
+              >
+                <MenuIcon />
+              </button>
+            )}
           </div>
+        </div>
+
+        <div className="relative border-t border-blue-900/40 bg-[#17213f] px-4 py-2.5 md:hidden">
+          <div className="flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-200">
+            <SearchIcon />
+
+            <input
+              value={query}
+              onChange={handleSearch}
+              placeholder="Search customer by name..."
+              className="ml-2 w-full bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400"
+            />
+
+            {query && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <CloseIcon />
+              </button>
+            )}
+          </div>
+
+          {searching && (loading || results.length > 0) && (
+            <div className="absolute left-4 right-4 top-[54px] z-[120] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+              {loading ? (
+                <div className="px-4 py-3 text-sm text-gray-500">
+                  Searching...
+                </div>
+              ) : (
+                results.map((customer) => (
+                  <button
+                    key={customer._id}
+                    type="button"
+                    onClick={() => selectCustomer(customer)}
+                    className="w-full border-b px-4 py-3 text-left last:border-0 hover:bg-gray-50"
+                  >
+                    <p className="text-sm font-medium text-gray-900">
+                      {customer.name}
+                    </p>
+
+                    <p className="mt-1 text-xs text-gray-500">
+                      Policy No: {customer.policyNumber || "-"}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </header>
 
       {page === "home" && (
-        <aside className="fixed left-0 top-[68px] z-[90] h-[calc(100vh-68px)] w-[210px] border-r border-gray-200 bg-white">
-
-          <nav className="px-3 pt-5">
-            {menu.map(([label, icon, target]) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => target && setPage(target)}
-                className={`mb-1.5 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                  page === target
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-[#596681] hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                {icon}
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
-
-          <div className="absolute bottom-5 left-0 w-full px-3">
-
+        <>
+          {mobileMenuOpen && (
             <button
               type="button"
-              onClick={onLogout}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600"
-            >
-              <LogoutIcon />
-              <span>Logout</span>
-            </button>
+              aria-label="Close menu"
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 z-[140] bg-black/40 md:hidden"
+            />
+          )}
 
-            <p className="mt-3 text-center text-[10px] text-gray-400">
-              Version 1.0.0
-            </p>
+          <aside
+            className={`fixed left-0 top-0 z-[150] h-screen w-[260px] border-r border-[#263457] bg-[#17213f] transition-transform duration-300 md:top-[68px] md:z-[90] md:h-[calc(100vh-68px)] md:w-[210px] md:translate-x-0 ${
+              mobileMenuOpen
+                ? "translate-x-0"
+                : "-translate-x-full"
+            }`}
+          >
+            <div className="flex h-[68px] items-center justify-between border-b border-white/10 px-5 md:hidden">
+              <button
+                type="button"
+                onClick={goHome}
+                className="flex items-center"
+              >
+                <img
+                  src="/lic.svg"
+                  alt="LIC"
+                  className="h-11 w-auto max-w-[120px] object-contain"
+                />
+              </button>
 
-          </div>
-        </aside>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-blue-100 hover:bg-white/10"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            <nav className="px-3 pt-5">
+              {menu.map(([label, icon, target]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleMenuClick(target)}
+                  className={`mb-1.5 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                    page === target
+                      ? "bg-white text-[#17213f]"
+                      : "text-blue-100 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {icon}
+                  <span>{label}</span>
+                </button>
+              ))}
+            </nav>
+
+            <div className="absolute bottom-5 left-0 w-full px-3">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-blue-100 hover:bg-red-500/10 hover:text-red-300"
+              >
+                <LogoutIcon />
+                <span>Logout</span>
+              </button>
+
+              <p className="mt-3 text-center text-[10px] text-blue-200/60">
+                Version 1.0.0
+              </p>
+            </div>
+          </aside>
+        </>
       )}
     </>
   );
