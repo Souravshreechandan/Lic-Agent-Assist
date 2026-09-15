@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Auth from "./pages/Auth";
@@ -5,6 +6,7 @@ import Home from "./pages/Home";
 import AgentDashboard from "./pages/AgentDashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import api from "./services/api";
 
 function App() {
   const [auth, setAuth] = useState("loading");
@@ -12,15 +14,37 @@ function App() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    setAuth(token ? "authenticated" : "unauthenticated");
+    const checkAuthentication = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setAuth("unauthenticated");
+        return;
+      }
+
+      try {
+        await api.get("/agent/profile");
+        setAuth("authenticated");
+      } catch (error) {
+        localStorage.removeItem("token");
+        setAuth("unauthenticated");
+      }
+    };
+
+    checkAuthentication();
   }, []);
+
+  const handleLogin = () => {
+    setSelectedCustomer(null);
+    setPage("home");
+    setAuth("authenticated");
+  };
 
   const logout = () => {
     localStorage.removeItem("token");
-    setAuth("unauthenticated");
-    setPage("home");
     setSelectedCustomer(null);
+    setPage("home");
+    setAuth("unauthenticated");
   };
 
   const handleCustomerSelect = (customer) => {
@@ -29,18 +53,16 @@ function App() {
 
   if (auth === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center">
-        Loading...
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <div className="text-sm text-gray-500">
+          Loading...
+        </div>
       </div>
     );
   }
 
   if (auth === "unauthenticated") {
-    return (
-      <Auth
-        setAuth={() => setAuth("authenticated")}
-      />
-    );
+    return <Auth setAuth={handleLogin} />;
   }
 
   return (

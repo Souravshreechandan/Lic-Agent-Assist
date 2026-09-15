@@ -1,3 +1,4 @@
+
 import React from "react";
 import CustomerForm from "./CustomerForm";
 
@@ -12,57 +13,29 @@ export default function EditCustomer({
 
   return (
     <div
-      className="
-        fixed
-        inset-0
-        z-50
-        flex
-        items-center
-        justify-center
-        bg-black/30
-        p-4
-      "
+      className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/40 p-3 pt-20 sm:items-center sm:p-4 sm:pt-4"
       onClick={onClose}
     >
       <div
-        className="
-          bg-white
-          w-full
-          max-w-2xl
-          rounded-xl
-          p-6
-          relative
-          max-h-[90vh]
-          overflow-y-auto
-        "
+        className="relative w-full max-w-2xl rounded-xl bg-white p-4 shadow-xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
-
-        {/* CLOSE BUTTON */}
         <button
           type="button"
           onClick={onClose}
-          className="
-            absolute
-            top-3
-            right-3
-            text-xl
-            text-gray-500
-            hover:text-gray-900
-            z-10
-          "
+          aria-label="Close"
+          className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full text-xl font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
         >
-          ✕
+          ×
         </button>
 
-        {/* EDIT CUSTOMER FORM */}
-        <CustomerForm
-          editData={customer}
-          onSuccess={onSuccess}
-        />
-
+        <div className="pr-10">
+          <CustomerForm
+            editData={customer}
+            onSuccess={onSuccess}
+          />
+        </div>
       </div>
     </div>
   );
 }
-
