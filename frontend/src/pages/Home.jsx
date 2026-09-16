@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import SearchBar from "../components/SearchBar";
@@ -52,11 +51,7 @@ function DueIcon() {
   );
 }
 
-export default function Home({
-  setPage,
-  selectedCustomer,
-  onCustomerSelect,
-}) {
+export default function Home({ setPage, selectedCustomer, onCustomerSelect }) {
   const [stats, setStats] = useState({
     totalCustomers: 0,
     totalPolicies: 0,
@@ -107,11 +102,8 @@ export default function Home({
     <div className="min-h-screen bg-[#f5f7fb] pt-[132px] lg:pt-[68px]">
       <main className="pl-0 lg:pl-[210px]">
         <div className="px-4 py-5 sm:px-5 sm:py-6 lg:px-7">
-
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-[#17213f]">
-              Dashboard
-            </h1>
+            <h1 className="text-2xl font-bold text-[#17213f]">Dashboard</h1>
 
             <p className="mt-1 text-sm text-gray-500">
               Manage your LIC customers and policies
@@ -129,15 +121,12 @@ export default function Home({
           )}
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
             {cards.map(([title, value, color]) => (
               <div
                 key={title}
                 className={`rounded-2xl border-l-4 bg-white p-5 shadow-md ${colors[color]}`}
               >
-                <p className="text-sm text-gray-500">
-                  {title}
-                </p>
+                <p className="text-sm text-gray-500">{title}</p>
 
                 <h2
                   className={`mt-2 text-3xl font-bold ${
@@ -148,7 +137,6 @@ export default function Home({
                 </h2>
               </div>
             ))}
-
           </div>
 
           <div className="mt-6">
@@ -157,7 +145,6 @@ export default function Home({
             </h2>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-
               <button
                 type="button"
                 onClick={() => setPage("addCustomer")}
@@ -196,25 +183,21 @@ export default function Home({
 
               <button
                 type="button"
-                onClick={() => setPage("dashboard")}
-                className="rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:border-orange-200 hover:shadow-md"
+                onClick={() => setPage("lapsedPolicies")}
+                className="rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:border-red-200 hover:shadow-md"
               >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
                   <DueIcon />
                 </div>
 
-                <h3 className="font-semibold text-gray-900">
-                  View Policies
-                </h3>
+                <h3 className="font-semibold text-gray-900">Lapsed Policies</h3>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  View and manage all LIC policies
+                  View all lapsed LIC policies
                 </p>
               </button>
-
             </div>
           </div>
-
         </div>
       </main>
     </div>

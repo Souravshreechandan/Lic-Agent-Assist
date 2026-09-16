@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Auth from "./pages/Auth";
@@ -54,9 +53,7 @@ function App() {
   if (auth === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="text-sm text-gray-500">
-          Loading...
-        </div>
+        <div className="text-sm text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -89,6 +86,14 @@ function App() {
         />
       )}
 
+      {page === "lapsedPolicies" && (
+        <AgentDashboard
+          policyFilter="Lapsed"
+          selectedCustomer={selectedCustomer}
+          onCustomerSelect={setSelectedCustomer}
+        />
+      )}
+
       {page === "addCustomer" && (
         <AgentDashboard
           autoOpenAdd
@@ -99,9 +104,7 @@ function App() {
 
       {page === "profile" && <Profile />}
 
-      {page === "settings" && (
-        <Settings onLogout={logout} />
-      )}
+      {page === "settings" && <Settings onLogout={logout} />}
     </>
   );
 }

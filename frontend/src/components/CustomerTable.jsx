@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import EditCustomer from "./EditCustomer";
@@ -5,16 +6,22 @@ import EditCustomer from "./EditCustomer";
 export default function CustomerTable({
   refreshKey,
   onDeleteSuccess,
+  policyFilter,
 }) {
   const [customers, setCustomers] = useState([]);
   const [editCustomer, setEditCustomer] = useState(null);
 
-  /* LOAD CUSTOMERS */
   const loadCustomers = async () => {
     try {
       const res = await api.get("/customers");
 
-      const sortedCustomers = res.data.sort((a, b) =>
+      const filteredCustomers = policyFilter
+        ? res.data.filter(
+            (customer) => customer.policyStatus === policyFilter
+          )
+        : res.data;
+
+      const sortedCustomers = filteredCustomers.sort((a, b) =>
         a.name.localeCompare(b.name)
       );
 
@@ -26,21 +33,18 @@ export default function CustomerTable({
 
   useEffect(() => {
     loadCustomers();
-  }, [refreshKey]);
+  }, [refreshKey, policyFilter]);
 
-  /* DELETE CUSTOMER */
   const deleteCustomer = async (id) => {
     if (!window.confirm("Delete this customer?")) return;
 
     try {
       await api.delete(`/customers/${id}`);
 
-      // Instant UI update
       setCustomers((prev) =>
         prev.filter((c) => c._id !== id)
       );
 
-      // Trigger stats refresh
       onDeleteSuccess();
     } catch (err) {
       console.error("Delete failed", err);
@@ -48,32 +52,27 @@ export default function CustomerTable({
     }
   };
 
-  /* EDIT SUCCESS */
   const handleEditSuccess = async () => {
     setEditCustomer(null);
-
-    // Reload table with updated customer
     await loadCustomers();
-
-    // Refresh dashboard statistics
     onDeleteSuccess();
   };
 
   return (
     <>
-      <div className="bg-white rounded-xl shadow p-4">
+      <div className="rounded-xl bg-white p-4 shadow">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-gray-50 text-gray-600">
-                <th className="p-3 border">S.No</th>
-                <th className="p-3 border">Name</th>
-                <th className="p-3 border">Policy No</th>
-                <th className="p-3 border">Policy Name</th>
-                <th className="p-3 border">Premium</th>
-                <th className="p-3 border">Frequency</th>
-                <th className="p-3 border">Payment</th>
-                <th className="p-3 border">Actions</th>
+                <th className="border p-3">S.No</th>
+                <th className="border p-3">Name</th>
+                <th className="border p-3">Policy No</th>
+                <th className="border p-3">Policy Name</th>
+                <th className="border p-3">Premium</th>
+                <th className="border p-3">Frequency</th>
+                <th className="border p-3">Payment</th>
+                <th className="border p-3">Actions</th>
               </tr>
             </thead>
 
@@ -81,82 +80,52 @@ export default function CustomerTable({
               {customers.map((c, i) => (
                 <tr
                   key={c._id}
-                  className="hover:bg-gray-50 text-center"
+                  className="text-center hover:bg-gray-50"
                 >
-                  <td className="p-2 border">
+                  <td className="border p-2">
                     {i + 1}
                   </td>
 
-                  <td className="p-2 border uppercase">
+                  <td className="border p-2 uppercase">
                     {c.name}
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="border p-2">
                     {c.policyNumber}
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="border p-2">
                     {c.policyName}
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="border p-2">
                     ₹{c.premiumAmount}
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="border p-2">
                     {c.paymentFrequency}
                   </td>
 
-                  <td className="p-2 border">
+                  <td className="border p-2">
                     {c.paymentType}
                   </td>
 
-                  <td className="p-2 border space-x-2">
-
-                    {/* EDIT */}
+                  <td className="space-x-2 border p-2">
                     <button
                       type="button"
                       onClick={() => setEditCustomer(c)}
-                      className="
-                        bg-amber-500
-                        hover:bg-amber-600
-                        text-white
-                        text-xs
-                        font-medium
-                        px-3
-                        py-1.5
-                        rounded-lg
-                        transition
-                        duration-200
-                        shadow-sm
-                        hover:shadow
-                      "
+                      className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition duration-200 hover:bg-amber-600 hover:shadow"
                     >
                       Edit
                     </button>
 
-                    {/* DELETE */}
                     <button
                       type="button"
                       onClick={() => deleteCustomer(c._id)}
-                      className="
-                        bg-red-500
-                        hover:bg-red-600
-                        text-white
-                        text-xs
-                        font-medium
-                        px-3
-                        py-1.5
-                        rounded-lg
-                        transition
-                        duration-200
-                        shadow-sm
-                        hover:shadow
-                      "
+                      className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition duration-200 hover:bg-red-600 hover:shadow"
                     >
                       Delete
                     </button>
-
                   </td>
                 </tr>
               ))}
@@ -167,7 +136,9 @@ export default function CustomerTable({
                     colSpan="8"
                     className="p-4 text-center text-gray-400"
                   >
-                    No customers found
+                    {policyFilter === "Lapsed"
+                      ? "No lapsed policies found"
+                      : "No customers found"}
                   </td>
                 </tr>
               )}
@@ -176,7 +147,6 @@ export default function CustomerTable({
         </div>
       </div>
 
-      {/* EDIT CUSTOMER MODAL */}
       {editCustomer && (
         <EditCustomer
           customer={editCustomer}
