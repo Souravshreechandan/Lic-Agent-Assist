@@ -1,10 +1,12 @@
 require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
 
+// Middleware
 app.use(
   cors({
     origin: [
@@ -19,26 +21,34 @@ app.use(
 
 app.use(express.json());
 
+// Health check route
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+// MongoDB connection
 let connectionPromise = null;
 
 const connectDB = async () => {
+  // Already connected
   if (mongoose.connection.readyState === 1) {
     return;
   }
 
+  // Reuse an existing connection attempt
   if (!connectionPromise) {
     connectionPromise = mongoose
-      .connect(process.env.MONGO_URI)
+      .connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 10000,
+      })
       .then(() => {
-        console.log("MongoDB connected");
+        console.log("MongoDB connected successfully");
       })
       .catch((error) => {
         connectionPromise = null;
+
         console.error("MongoDB connection failed:", error.message);
+
         throw error;
       });
   }
@@ -46,7 +56,13 @@ const connectDB = async () => {
   await connectionPromise;
 };
 
+// Database middleware for API requests
 app.use(async (req, res, next) => {
+  // Skip database connection for the health check
+  if (req.path === "/") {
+    return next();
+  }
+
   try {
     await connectDB();
     next();
@@ -60,6 +76,7 @@ app.use(async (req, res, next) => {
   }
 });
 
+// API routes
 app.use("/api/auth", require("./routes/authRoutes"));
 
 app.use("/api/customers", require("./routes/customerRoutes"));
@@ -70,10 +87,25 @@ app.use("/api/agent", require("./routes/agentRoutes"));
 
 app.use("/api/cron", require("./routes/cronRoutes"));
 
-if (!process.env.VERCEL) {
-  app.listen(5000, () => {
-    console.log("Backend running on http://localhost:5000");
-  });
-}
+// Local development startup
+const PORT = process.env.PORT || 5000;
 
+if (!process.env.VERCEL) {
+  const startServer = async () => {
+    try {
+      console.log("Connecting to MongoDB...");
+
+      await connectDB();
+
+      app.listen(PORT, () => {
+        console.log(`Backend running on http://localhost:${PORT}`);
+      });
+    } catch (error) {
+      console.error("Backend startup failed:", error.message);
+      process.exit(1);
+    }
+  };
+
+  startServer();
+}
 module.exports = app;
