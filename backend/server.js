@@ -10,6 +10,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://lic-agent-assist-full.vercel.app",
+      "https://lic-agent-assist.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -22,6 +23,43 @@ app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+let connectionPromise = null;
+
+const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (!connectionPromise) {
+    connectionPromise = mongoose
+      .connect(process.env.MONGO_URI)
+      .then(() => {
+        console.log("MongoDB connected");
+      })
+      .catch((error) => {
+        connectionPromise = null;
+        console.error("MongoDB connection failed:", error.message);
+        throw error;
+      });
+  }
+
+  await connectionPromise;
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection error:", error.message);
+
+    res.status(503).json({
+      success: false,
+      message: "Database connection failed",
+    });
+  }
+});
+
 app.use("/api/auth", require("./routes/authRoutes"));
 
 app.use("/api/customers", require("./routes/customerRoutes"));
@@ -30,25 +68,7 @@ app.use("/api/customers", require("./routes/dueDateRoutes"));
 
 app.use("/api/agent", require("./routes/agentRoutes"));
 
-// Cron route
 app.use("/api/cron", require("./routes/cronRoutes"));
-
-let isConnected = false;
-
-const connectDB = async () => {
-  if (isConnected) return;
-
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-
-    isConnected = true;
-    console.log("MongoDB connected");
-  } catch (err) {
-    console.error("MongoDB connection failed", err);
-  }
-};
-
-connectDB();
 
 if (!process.env.VERCEL) {
   app.listen(5000, () => {
