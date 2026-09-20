@@ -51,6 +51,23 @@ function DueIcon() {
   );
 }
 
+function UpcomingIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h6" />
+    </svg>
+  );
+}
+
 export default function Home({ setPage, selectedCustomer, onCustomerSelect }) {
   const [stats, setStats] = useState({
     totalCustomers: 0,
@@ -220,12 +237,28 @@ export default function Home({ setPage, selectedCustomer, onCustomerSelect }) {
                   </svg>
                 </div>
 
-                <h3 className="font-semibold text-gray-900">
-                  Due Date
-                </h3>
+                <h3 className="font-semibold text-gray-900">Due Date</h3>
 
                 <p className="mt-1 text-sm text-gray-500">
                   Upload Premium Due List
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPage("upcomingPremiums")}
+                className="rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:border-indigo-200 hover:shadow-md"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <UpcomingIcon />
+                </div>
+
+                <h3 className="font-semibold text-gray-900">
+                  Upcoming Premiums
+                </h3>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  View policies with premiums due this month
                 </p>
               </button>
             </div>

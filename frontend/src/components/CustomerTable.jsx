@@ -2,11 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import EditCustomer from "./EditCustomer";
 
-export default function CustomerTable({
-  refreshKey,
-  onDeleteSuccess,
-  policyFilter,
-}) {
+export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
   const [customers, setCustomers] = useState([]);
   const [editCustomer, setEditCustomer] = useState(null);
 
@@ -14,13 +10,7 @@ export default function CustomerTable({
     try {
       const res = await api.get("/customers");
 
-      const filteredCustomers = policyFilter
-        ? res.data.filter(
-            (customer) => customer.policyStatus === policyFilter
-          )
-        : res.data;
-
-      const sortedCustomers = filteredCustomers.sort((a, b) =>
+      const sortedCustomers = [...res.data].sort((a, b) =>
         a.name.localeCompare(b.name)
       );
 
@@ -32,7 +22,7 @@ export default function CustomerTable({
 
   useEffect(() => {
     loadCustomers();
-  }, [refreshKey, policyFilter]);
+  }, [refreshKey]);
 
   const formatDate = (date) => {
     if (!date) return "—";
@@ -57,7 +47,9 @@ export default function CustomerTable({
 
       setCustomers((prev) => prev.filter((c) => c._id !== id));
 
-      onDeleteSuccess();
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
+      }
     } catch (err) {
       console.error("Delete failed", err);
       alert("Delete failed");
@@ -67,7 +59,10 @@ export default function CustomerTable({
   const handleEditSuccess = async () => {
     setEditCustomer(null);
     await loadCustomers();
-    onDeleteSuccess();
+
+    if (onDeleteSuccess) {
+      onDeleteSuccess();
+    }
   };
 
   return (
@@ -92,10 +87,7 @@ export default function CustomerTable({
 
             <tbody>
               {customers.map((c, i) => (
-                <tr
-                  key={c._id}
-                  className="text-center hover:bg-gray-50"
-                >
+                <tr key={c._id} className="text-center hover:bg-gray-50">
                   <td className="border p-2">{i + 1}</td>
 
                   <td className="border p-2 uppercase">{c.name}</td>
@@ -148,13 +140,8 @@ export default function CustomerTable({
 
               {customers.length === 0 && (
                 <tr>
-                  <td
-                    colSpan="10"
-                    className="p-4 text-center text-gray-400"
-                  >
-                    {policyFilter === "Lapsed"
-                      ? "No lapsed policies found"
-                      : "No customers found"}
+                  <td colSpan="10" className="p-4 text-center text-gray-400">
+                    No customers found
                   </td>
                 </tr>
               )}

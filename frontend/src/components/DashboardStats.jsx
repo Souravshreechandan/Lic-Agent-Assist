@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 
@@ -7,7 +6,6 @@ export default function DashboardStats({ refreshKey }) {
     totalCustomers: 0,
     totalPolicies: 0,
     activePolicies: 0,
-    lapsedPolicies: 0,
   });
 
   useEffect(() => {
@@ -19,7 +17,6 @@ export default function DashboardStats({ refreshKey }) {
           totalCustomers: data.totalCustomers || 0,
           totalPolicies: data.totalPolicies || 0,
           activePolicies: data.activePolicies || 0,
-          lapsedPolicies: data.lapsedPolicies || 0,
         });
       } catch (err) {
         console.error("Stats fetch failed", err);
@@ -33,18 +30,16 @@ export default function DashboardStats({ refreshKey }) {
     ["Total Customers", stats.totalCustomers, "blue"],
     ["Total Policies", stats.totalPolicies, "indigo"],
     ["Active Policies", stats.activePolicies, "green"],
-    ["Lapsed Policies", stats.lapsedPolicies, "red"],
   ];
 
   const colors = {
     blue: "border-blue-600 text-blue-600",
     indigo: "border-indigo-600 text-indigo-600",
     green: "border-green-600 text-green-600",
-    red: "border-red-600 text-red-600",
   };
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {cards.map(([title, value, color]) => (
         <div
           key={title}
@@ -52,7 +47,11 @@ export default function DashboardStats({ refreshKey }) {
         >
           <p className="text-sm text-gray-500">{title}</p>
 
-          <h2 className={`mt-2 text-3xl font-bold ${colors[color].split(" ")[1]}`}>
+          <h2
+            className={`mt-2 text-3xl font-bold ${
+              colors[color].split(" ")[1]
+            }`}
+          >
             {value}
           </h2>
         </div>

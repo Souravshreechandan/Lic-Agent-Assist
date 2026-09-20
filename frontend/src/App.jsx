@@ -6,6 +6,8 @@ import AgentDashboard from "./pages/AgentDashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Duedate from "./pages/Duedate";
+import UpcomingPremiums from "./pages/UpcomingPremiums";
+import LapsedPolicies from "./pages/LapsedPolicies";
 import api from "./services/api";
 
 function App() {
@@ -54,9 +56,7 @@ function App() {
   if (auth === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="text-sm text-gray-500">
-          Loading...
-        </div>
+        <div className="text-sm text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -89,14 +89,6 @@ function App() {
         />
       )}
 
-      {page === "lapsedPolicies" && (
-        <AgentDashboard
-          policyFilter="Lapsed"
-          selectedCustomer={selectedCustomer}
-          onCustomerSelect={setSelectedCustomer}
-        />
-      )}
-
       {page === "addCustomer" && (
         <AgentDashboard
           autoOpenAdd
@@ -107,11 +99,13 @@ function App() {
 
       {page === "profile" && <Profile />}
 
-      {page === "settings" && (
-        <Settings onLogout={logout} />
-      )}
+      {page === "settings" && <Settings onLogout={logout} />}
 
       {page === "dueDate" && <Duedate />}
+
+      {page === "upcomingPremiums" && <UpcomingPremiums />}
+
+      {page === "lapsedPolicies" && <LapsedPolicies />}
     </>
   );
 }

@@ -8,7 +8,6 @@ export default function AgentDashboard({
   autoOpenAdd,
   selectedCustomer,
   onCustomerSelect,
-  policyFilter,
 }) {
   const [openModal, setOpenModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -16,7 +15,9 @@ export default function AgentDashboard({
   const openAdd = () => setOpenModal(true);
 
   useEffect(() => {
-    if (autoOpenAdd) openAdd();
+    if (autoOpenAdd) {
+      openAdd();
+    }
   }, [autoOpenAdd]);
 
   const onSuccess = () => {
@@ -31,9 +32,7 @@ export default function AgentDashboard({
   return (
     <div className="min-h-screen bg-gray-100 p-4 pt-[84px]">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
-          {policyFilter === "Lapsed" ? "Lapsed Policies" : "Agent Dashboard"}
-        </h1>
+        <h1 className="text-xl font-semibold">Agent Dashboard</h1>
 
         <button
           type="button"
@@ -59,7 +58,6 @@ export default function AgentDashboard({
       <CustomerTable
         refreshKey={refreshKey}
         onDeleteSuccess={onDeleteSuccess}
-        policyFilter={policyFilter}
       />
 
       {openModal && (
