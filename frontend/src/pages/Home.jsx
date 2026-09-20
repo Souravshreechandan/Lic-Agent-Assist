@@ -190,10 +190,42 @@ export default function Home({ setPage, selectedCustomer, onCustomerSelect }) {
                   <DueIcon />
                 </div>
 
-                <h3 className="font-semibold text-gray-900">Lapsed Policies</h3>
+                <h3 className="font-semibold text-gray-900">
+                  Lapsed Policies
+                </h3>
 
                 <p className="mt-1 text-sm text-gray-500">
                   View all lapsed LIC policies
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPage("dueDate")}
+                className="rounded-2xl border border-gray-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-200 hover:shadow-md"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.9"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 16V4" />
+                    <path d="m7 9 5-5 5 5" />
+                    <path d="M5 20h14" />
+                  </svg>
+                </div>
+
+                <h3 className="font-semibold text-gray-900">
+                  Due Date
+                </h3>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  Upload Premium Due List
                 </p>
               </button>
             </div>

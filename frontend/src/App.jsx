@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import AgentDashboard from "./pages/AgentDashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Duedate from "./pages/Duedate";
 import api from "./services/api";
 
 function App() {
@@ -53,7 +54,9 @@ function App() {
   if (auth === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="text-sm text-gray-500">Loading...</div>
+        <div className="text-sm text-gray-500">
+          Loading...
+        </div>
       </div>
     );
   }
@@ -104,7 +107,11 @@ function App() {
 
       {page === "profile" && <Profile />}
 
-      {page === "settings" && <Settings onLogout={logout} />}
+      {page === "settings" && (
+        <Settings onLogout={logout} />
+      )}
+
+      {page === "dueDate" && <Duedate />}
     </>
   );
 }

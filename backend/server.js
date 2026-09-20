@@ -12,10 +12,7 @@ app.use(
       "https://lic-agent-assist-full.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -25,20 +22,16 @@ app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
-app.use(
-  "/api/auth",
-  require("./routes/authRoutes")
-);
+app.use("/api/auth", require("./routes/authRoutes"));
 
-app.use(
-  "/api/customers",
-  require("./routes/customerRoutes")
-);
+app.use("/api/customers", require("./routes/customerRoutes"));
 
-app.use(
-  "/api/agent",
-  require("./routes/agentRoutes")
-);
+app.use("/api/customers", require("./routes/dueDateRoutes"));
+
+app.use("/api/agent", require("./routes/agentRoutes"));
+
+// Cron route
+app.use("/api/cron", require("./routes/cronRoutes"));
 
 let isConnected = false;
 
@@ -46,18 +39,12 @@ const connectDB = async () => {
   if (isConnected) return;
 
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI
-    );
+    await mongoose.connect(process.env.MONGO_URI);
 
     isConnected = true;
-
     console.log("MongoDB connected");
   } catch (err) {
-    console.error(
-      "MongoDB connection failed",
-      err
-    );
+    console.error("MongoDB connection failed", err);
   }
 };
 
@@ -65,9 +52,7 @@ connectDB();
 
 if (!process.env.VERCEL) {
   app.listen(5000, () => {
-    console.log(
-      "Backend running on http://localhost:5000"
-    );
+    console.log("Backend running on http://localhost:5000");
   });
 }
 

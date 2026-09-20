@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 
@@ -55,9 +54,7 @@ export default function CustomerForm({ editData, onSuccess }) {
         paymentType: editData.paymentType || "Offline",
         paymentStatus: editData.paymentStatus || "Pending",
         policyStatus: editData.policyStatus || "Active",
-        dueDate: editData.dueDate
-          ? editData.dueDate.slice(0, 10)
-          : "",
+        dueDate: editData.dueDate ? editData.dueDate.slice(0, 10) : "",
       });
     } else {
       setForm(emptyForm);
@@ -66,25 +63,42 @@ export default function CustomerForm({ editData, onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      if (name === "paymentType" && value === "Online") {
+        updated.paymentStatus = "Pending";
+      }
+
+      return updated;
+    });
   };
 
   const submit = async () => {
     try {
       if (!form.name.trim()) return alert("Please enter customer name");
       if (!form.dob) return alert("Please select date of birth");
-      if (!form.policyNumber.trim())
+      if (!form.policyNumber.trim()) {
         return alert("Please enter policy number");
+      }
+
       if (
         form.premiumAmount === "" ||
         Number(form.premiumAmount) <= 0
-      )
+      ) {
         return alert("Please enter a valid premium amount");
-      if (!form.dueDate) return alert("Please select next due date");
+      }
+
+      if (!form.dueDate) {
+        return alert("Please select next due date");
+      }
 
       const dataToSend = {
         ...form,
         premiumAmount: Number(form.premiumAmount),
+        paymentStatus:
+          form.paymentType === "Online" ? "Pending" : form.paymentStatus,
         policyStatus: form.policyStatus || "Active",
       };
 
@@ -112,6 +126,7 @@ export default function CustomerForm({ editData, onSuccess }) {
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
             {editData ? "Edit Customer" : "Add Customer"}
           </h2>
+
           <p className="text-sm text-gray-500 mt-1">
             Enter customer and policy information
           </p>
@@ -131,6 +146,7 @@ export default function CustomerForm({ editData, onSuccess }) {
                 : "bg-green-500"
             }`}
           />
+
           {form.policyStatus}
         </span>
       </div>
@@ -217,15 +233,24 @@ export default function CustomerForm({ editData, onSuccess }) {
         </Field>
 
         <Field label="Payment Status">
-          <select
-            name="paymentStatus"
-            className={inputClass}
-            value={form.paymentStatus}
-            onChange={handleChange}
-          >
-            <option value="Pending">Pending</option>
-            <option value="Paid">Paid</option>
-          </select>
+          {form.paymentType === "Online" ? (
+            <div className={`${inputClass} flex items-center justify-between`}>
+              <span className="text-gray-600">Automatic</span>
+              <span className="text-xs font-medium text-blue-600">
+                Date-based
+              </span>
+            </div>
+          ) : (
+            <select
+              name="paymentStatus"
+              className={inputClass}
+              value={form.paymentStatus}
+              onChange={handleChange}
+            >
+              <option value="Pending">Pending</option>
+              <option value="Paid">Paid</option>
+            </select>
+          )}
         </Field>
 
         <Field label="Policy Status">
@@ -278,6 +303,7 @@ function Field({ label, children }) {
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
+
       {children}
     </div>
   );
@@ -313,4 +339,3 @@ function DateInput({ label, name, value, onChange }) {
     </div>
   );
 }
-

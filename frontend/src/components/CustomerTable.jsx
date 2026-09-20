@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import EditCustomer from "./EditCustomer";
@@ -35,15 +34,28 @@ export default function CustomerTable({
     loadCustomers();
   }, [refreshKey, policyFilter]);
 
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) return "—";
+
+    return parsedDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  };
+
   const deleteCustomer = async (id) => {
     if (!window.confirm("Delete this customer?")) return;
 
     try {
       await api.delete(`/customers/${id}`);
 
-      setCustomers((prev) =>
-        prev.filter((c) => c._id !== id)
-      );
+      setCustomers((prev) => prev.filter((c) => c._id !== id));
 
       onDeleteSuccess();
     } catch (err) {
@@ -71,7 +83,9 @@ export default function CustomerTable({
                 <th className="border p-3">Policy Name</th>
                 <th className="border p-3">Premium</th>
                 <th className="border p-3">Frequency</th>
-                <th className="border p-3">Payment</th>
+                <th className="border p-3">Payment Type</th>
+                <th className="border p-3">Payment Status</th>
+                <th className="border p-3">Due Date</th>
                 <th className="border p-3">Actions</th>
               </tr>
             </thead>
@@ -82,33 +96,35 @@ export default function CustomerTable({
                   key={c._id}
                   className="text-center hover:bg-gray-50"
                 >
-                  <td className="border p-2">
-                    {i + 1}
-                  </td>
+                  <td className="border p-2">{i + 1}</td>
 
-                  <td className="border p-2 uppercase">
-                    {c.name}
-                  </td>
+                  <td className="border p-2 uppercase">{c.name}</td>
 
-                  <td className="border p-2">
-                    {c.policyNumber}
-                  </td>
+                  <td className="border p-2">{c.policyNumber}</td>
+
+                  <td className="border p-2">{c.policyName}</td>
 
                   <td className="border p-2">
-                    {c.policyName}
+                    ₹{Number(c.premiumAmount || 0).toLocaleString("en-IN")}
                   </td>
 
-                  <td className="border p-2">
-                    ₹{c.premiumAmount}
-                  </td>
+                  <td className="border p-2">{c.paymentFrequency}</td>
+
+                  <td className="border p-2">{c.paymentType}</td>
 
                   <td className="border p-2">
-                    {c.paymentFrequency}
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        c.paymentStatus === "Paid"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {c.paymentStatus || "Pending"}
+                    </span>
                   </td>
 
-                  <td className="border p-2">
-                    {c.paymentType}
-                  </td>
+                  <td className="border p-2">{formatDate(c.dueDate)}</td>
 
                   <td className="space-x-2 border p-2">
                     <button
@@ -133,7 +149,7 @@ export default function CustomerTable({
               {customers.length === 0 && (
                 <tr>
                   <td
-                    colSpan="8"
+                    colSpan="10"
                     className="p-4 text-center text-gray-400"
                   >
                     {policyFilter === "Lapsed"
