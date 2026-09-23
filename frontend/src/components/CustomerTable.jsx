@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import EditCustomer from "./EditCustomer";
@@ -11,7 +12,7 @@ export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
       const res = await api.get("/customers");
 
       const sortedCustomers = [...res.data].sort((a, b) =>
-        a.name.localeCompare(b.name)
+        (a.name || "").localeCompare(b.name || "")
       );
 
       setCustomers(sortedCustomers);
@@ -65,6 +66,17 @@ export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
     }
   };
 
+  const getPolicyStatusClass = (status) => {
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-700";
+      case "Lapsed":
+        return "bg-red-100 text-red-700";
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
+  };
+
   return (
     <>
       <div className="rounded-xl bg-white p-4 shadow">
@@ -80,6 +92,7 @@ export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
                 <th className="border p-3">Frequency</th>
                 <th className="border p-3">Payment Type</th>
                 <th className="border p-3">Payment Status</th>
+                <th className="border p-3">Policy Status</th>
                 <th className="border p-3">Due Date</th>
                 <th className="border p-3">Actions</th>
               </tr>
@@ -90,19 +103,19 @@ export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
                 <tr key={c._id} className="text-center hover:bg-gray-50">
                   <td className="border p-2">{i + 1}</td>
 
-                  <td className="border p-2 uppercase">{c.name}</td>
+                  <td className="border p-2 uppercase">{c.name || "—"}</td>
 
-                  <td className="border p-2">{c.policyNumber}</td>
+                  <td className="border p-2">{c.policyNumber || "—"}</td>
 
-                  <td className="border p-2">{c.policyName}</td>
+                  <td className="border p-2">{c.policyName || "—"}</td>
 
                   <td className="border p-2">
                     ₹{Number(c.premiumAmount || 0).toLocaleString("en-IN")}
                   </td>
 
-                  <td className="border p-2">{c.paymentFrequency}</td>
+                  <td className="border p-2">{c.paymentFrequency || "—"}</td>
 
-                  <td className="border p-2">{c.paymentType}</td>
+                  <td className="border p-2">{c.paymentType || "—"}</td>
 
                   <td className="border p-2">
                     <span
@@ -116,9 +129,19 @@ export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
                     </span>
                   </td>
 
+                  <td className="border p-2">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${getPolicyStatusClass(
+                        c.policyStatus
+                      )}`}
+                    >
+                      {c.policyStatus || "Not Set"}
+                    </span>
+                  </td>
+
                   <td className="border p-2">{formatDate(c.dueDate)}</td>
 
-                  <td className="space-x-2 border p-2">
+                  <td className="space-x-2 whitespace-nowrap border p-2">
                     <button
                       type="button"
                       onClick={() => setEditCustomer(c)}
@@ -140,7 +163,7 @@ export default function CustomerTable({ refreshKey, onDeleteSuccess }) {
 
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan="10" className="p-4 text-center text-gray-400">
+                  <td colSpan={11} className="p-4 text-center text-gray-400">
                     No customers found
                   </td>
                 </tr>

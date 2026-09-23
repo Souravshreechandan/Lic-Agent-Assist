@@ -42,6 +42,10 @@ export default function CustomerForm({ editData, onSuccess }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
+  /* =========================================================
+     LOAD FORM DATA
+  ========================================================= */
+
   useEffect(() => {
     if (editData) {
       setForm({
@@ -61,30 +65,40 @@ export default function CustomerForm({ editData, onSuccess }) {
     }
   }, [editData]);
 
+  /* =========================================================
+     HANDLE INPUT CHANGES
+  ========================================================= */
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setForm((prev) => {
-      const updated = { ...prev, [name]: value };
-
-      if (name === "paymentType" && value === "Online") {
-        updated.paymentStatus = "Pending";
-      }
-
-      return updated;
-    });
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  /* =========================================================
+     SUBMIT FORM
+  ========================================================= */
 
   const submit = async () => {
     try {
-      if (!form.name.trim()) return alert("Please enter customer name");
-      if (!form.dob) return alert("Please select date of birth");
+      if (!form.name.trim()) {
+        return alert("Please enter customer name");
+      }
+
+      if (!form.dob) {
+        return alert("Please select date of birth");
+      }
+
       if (!form.policyNumber.trim()) {
         return alert("Please enter policy number");
       }
 
       if (
         form.premiumAmount === "" ||
+        !Number.isFinite(Number(form.premiumAmount)) ||
         Number(form.premiumAmount) <= 0
       ) {
         return alert("Please enter a valid premium amount");
@@ -94,11 +108,23 @@ export default function CustomerForm({ editData, onSuccess }) {
         return alert("Please select next due date");
       }
 
+      if (!["Paid", "Pending"].includes(form.paymentStatus)) {
+        return alert("Please select a valid payment status");
+      }
+
+      if (!["Online", "Offline"].includes(form.paymentType)) {
+        return alert("Please select a valid payment type");
+      }
+
       const dataToSend = {
         ...form,
+        name: form.name.trim(),
+        policyNumber: form.policyNumber.trim(),
         premiumAmount: Number(form.premiumAmount),
-        paymentStatus:
-          form.paymentType === "Online" ? "Pending" : form.paymentStatus,
+
+        // Both Online and Offline use the selected status.
+        paymentStatus: form.paymentStatus,
+
         policyStatus: form.policyStatus || "Active",
       };
 
@@ -110,17 +136,28 @@ export default function CustomerForm({ editData, onSuccess }) {
         await api.post("/customers", dataToSend);
       }
 
-      onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err) {
       console.error("Customer save error:", err);
-      alert(err.response?.data?.message || "Failed to save customer");
+
+      alert(
+        err.response?.data?.message || "Failed to save customer"
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  /* =========================================================
+     UI
+  ========================================================= */
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6">
+      {/* HEADER */}
+
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
@@ -151,7 +188,11 @@ export default function CustomerForm({ editData, onSuccess }) {
         </span>
       </div>
 
+      {/* FORM FIELDS */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* CUSTOMER NAME */}
+
         <Field label="Customer Name">
           <input
             name="name"
@@ -162,12 +203,16 @@ export default function CustomerForm({ editData, onSuccess }) {
           />
         </Field>
 
+        {/* DATE OF BIRTH */}
+
         <DateInput
           label="Date of Birth"
           name="dob"
           value={form.dob}
           onChange={handleChange}
         />
+
+        {/* POLICY NUMBER */}
 
         <Field label="Policy Number">
           <input
@@ -179,6 +224,8 @@ export default function CustomerForm({ editData, onSuccess }) {
           />
         </Field>
 
+        {/* POLICY NAME */}
+
         <Field label="Policy Name">
           <select
             name="policyName"
@@ -186,13 +233,15 @@ export default function CustomerForm({ editData, onSuccess }) {
             value={form.policyName}
             onChange={handleChange}
           >
-            {POLICY_OPTIONS.map((p) => (
-              <option key={p} value={p}>
-                LIC {p}
+            {POLICY_OPTIONS.map((policy) => (
+              <option key={policy} value={policy}>
+                LIC {policy}
               </option>
             ))}
           </select>
         </Field>
+
+        {/* PREMIUM AMOUNT */}
 
         <Field label="Premium Amount">
           <input
@@ -205,6 +254,8 @@ export default function CustomerForm({ editData, onSuccess }) {
             onChange={handleChange}
           />
         </Field>
+
+        {/* PAYMENT FREQUENCY */}
 
         <Field label="Payment Frequency">
           <select
@@ -220,6 +271,8 @@ export default function CustomerForm({ editData, onSuccess }) {
           </select>
         </Field>
 
+        {/* PAYMENT TYPE */}
+
         <Field label="Payment Type">
           <select
             name="paymentType"
@@ -232,26 +285,21 @@ export default function CustomerForm({ editData, onSuccess }) {
           </select>
         </Field>
 
+        {/* PAYMENT STATUS - MANUAL FOR BOTH TYPES */}
+
         <Field label="Payment Status">
-          {form.paymentType === "Online" ? (
-            <div className={`${inputClass} flex items-center justify-between`}>
-              <span className="text-gray-600">Automatic</span>
-              <span className="text-xs font-medium text-blue-600">
-                Date-based
-              </span>
-            </div>
-          ) : (
-            <select
-              name="paymentStatus"
-              className={inputClass}
-              value={form.paymentStatus}
-              onChange={handleChange}
-            >
-              <option value="Pending">Pending</option>
-              <option value="Paid">Paid</option>
-            </select>
-          )}
+          <select
+            name="paymentStatus"
+            className={inputClass}
+            value={form.paymentStatus}
+            onChange={handleChange}
+          >
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+          </select>
         </Field>
+
+        {/* POLICY STATUS */}
 
         <Field label="Policy Status">
           <select
@@ -269,6 +317,8 @@ export default function CustomerForm({ editData, onSuccess }) {
           </select>
         </Field>
 
+        {/* NEXT DUE DATE */}
+
         <DateInput
           label="Next Due Date"
           name="dueDate"
@@ -276,6 +326,8 @@ export default function CustomerForm({ editData, onSuccess }) {
           onChange={handleChange}
         />
       </div>
+
+      {/* SUBMIT BUTTON */}
 
       <button
         type="button"
@@ -297,6 +349,10 @@ export default function CustomerForm({ editData, onSuccess }) {
   );
 }
 
+/* =========================================================
+   REUSABLE FIELD
+========================================================= */
+
 function Field({ label, children }) {
   return (
     <div>
@@ -308,6 +364,10 @@ function Field({ label, children }) {
     </div>
   );
 }
+
+/* =========================================================
+   REUSABLE DATE INPUT
+========================================================= */
 
 function DateInput({ label, name, value, onChange }) {
   return (

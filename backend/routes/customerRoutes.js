@@ -4,6 +4,7 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// PAYMENT FREQUENCY
 const getFrequencyMonths = (frequency) =>
   ({
     Monthly: 1,
@@ -12,9 +13,11 @@ const getFrequencyMonths = (frequency) =>
     Yearly: 12,
   }[frequency] || 3);
 
+// PENDING WINDOW
 const getPendingDays = (frequency) =>
   frequency === "Monthly" ? 15 : 30;
 
+// NORMALIZE DATE
 const normalizeDate = (date) => {
   if (!date) return null;
 
@@ -31,6 +34,7 @@ const normalizeDate = (date) => {
   );
 };
 
+// ADD MONTHS WITHOUT OVERFLOWING MONTH-END DATES
 const addMonths = (date, months) => {
   const original = normalizeDate(date);
 
@@ -53,6 +57,7 @@ const addMonths = (date, months) => {
   return result;
 };
 
+// TODAY
 const getToday = () => {
   const now = new Date();
 
@@ -61,6 +66,7 @@ const getToday = () => {
   );
 };
 
+// CHECK PENDING WINDOW
 const isWithinPendingWindow = (dueDate, frequency) => {
   const due = normalizeDate(dueDate);
 
@@ -76,6 +82,7 @@ const isWithinPendingWindow = (dueDate, frequency) => {
   return today >= pendingStart;
 };
 
+// CALCULATE MISSED PAYMENT PERIODS
 const calculateMissedPeriods = (dueDate, frequency) => {
   const due = normalizeDate(dueDate);
 
@@ -101,6 +108,7 @@ const calculateMissedPeriods = (dueDate, frequency) => {
   return periods;
 };
 
+// CALCULATE TOTAL DUE
 const calculateTotalDue = (customer) => {
   if (!customer || customer.paymentStatus !== "Pending") {
     return 0;
@@ -120,38 +128,33 @@ const calculateTotalDue = (customer) => {
   return Math.max(missedPeriods, 1) * premium;
 };
 
+// ONLINE PAYMENT LOGIC
+//
+// Before pending window: Paid
+// During pending window: Pending
+// On due date: Paid automatically
+// After due date: advance to next payment cycle
+//
+// Monthly: pending window starts 15 days before due date.
+// Quarterly, Half-Yearly, Yearly: pending window starts 30 days before due date.
 const getOnlinePaymentDetails = (customer) => {
-  const dueDate = normalizeDate(customer.dueDate);
+  const originalDueDate = normalizeDate(customer.dueDate);
 
-  if (!dueDate) {
+  if (!originalDueDate) {
     return {
-      paymentStatus: "Pending",
+      paymentStatus: customer.paymentStatus || "Pending",
       dueDate: null,
     };
   }
 
   const today = getToday();
-
-  if (today.getTime() === dueDate.getTime()) {
-    return {
-      paymentStatus: "Paid",
-      dueDate,
-    };
-  }
-
-  if (today < dueDate) {
-    return {
-      paymentStatus: "Pending",
-      dueDate,
-    };
-  }
-
   const months = getFrequencyMonths(customer.paymentFrequency);
 
-  let nextDueDate = new Date(dueDate);
+  let dueDate = new Date(originalDueDate);
 
-  while (nextDueDate <= today) {
-    nextDueDate = addMonths(nextDueDate, months);
+  // If the due date has passed, move to the next payment cycle.
+  while (dueDate < today) {
+    const nextDueDate = addMonths(dueDate, months);
 
     if (!nextDueDate) {
       return {
@@ -159,14 +162,34 @@ const getOnlinePaymentDetails = (customer) => {
         dueDate,
       };
     }
+
+    dueDate = nextDueDate;
   }
 
+  // On the due date, automatically mark the policy as Paid.
+  if (today.getTime() === dueDate.getTime()) {
+    return {
+      paymentStatus: "Paid",
+      dueDate,
+    };
+  }
+
+  // During the pending window, show Pending.
+  if (isWithinPendingWindow(dueDate, customer.paymentFrequency)) {
+    return {
+      paymentStatus: "Pending",
+      dueDate,
+    };
+  }
+
+  // Before the pending window, show Paid.
   return {
-    paymentStatus: "Pending",
-    dueDate: nextDueDate,
+    paymentStatus: "Paid",
+    dueDate,
   };
 };
 
+// PROCESS CUSTOMER DATA
 const customerWithTotalDue = (customer) => {
   const data = customer.toObject
     ? customer.toObject()
@@ -196,6 +219,9 @@ const customerWithTotalDue = (customer) => {
   return data;
 };
 
+// ========================================
+// ADD CUSTOMER
+// ========================================
 router.post("/", auth, async (req, res) => {
   try {
     const {
@@ -212,10 +238,7 @@ router.post("/", auth, async (req, res) => {
     } = req.body;
 
     const finalPaymentType = paymentType || "Offline";
-    const finalPaymentStatus =
-      finalPaymentType === "Online"
-        ? "Pending"
-        : paymentStatus || "Pending";
+    const finalPaymentStatus = paymentStatus || "Pending";
 
     const customer = new Customer({
       agentId: req.agentId,
@@ -246,6 +269,9 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
+// ========================================
+// GET ALL CUSTOMERS
+// ========================================
 router.get("/", auth, async (req, res) => {
   try {
     const customers = await Customer.find({
@@ -262,6 +288,9 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+// ========================================
+// SEARCH CUSTOMERS
+// ========================================
 router.get("/search", auth, async (req, res) => {
   try {
     const q = req.query.q?.trim();
@@ -285,6 +314,9 @@ router.get("/search", auth, async (req, res) => {
   }
 });
 
+// ========================================
+// UPDATE CUSTOMER
+// ========================================
 router.put("/:id", auth, async (req, res) => {
   try {
     const customer = await Customer.findOne({
@@ -316,77 +348,79 @@ router.put("/:id", auth, async (req, res) => {
     const oldDueDate = customer.dueDate;
 
     const newPaymentType = paymentType || oldPaymentType;
+
     const finalFrequency =
       paymentFrequency || customer.paymentFrequency;
 
-    let newPaymentStatus =
-      newPaymentType === "Online"
+    let newPaymentStatus = paymentStatus || oldPaymentStatus;
+
+    // Shared payment update logic for Online and Offline policies.
+    const effectiveOldStatus =
+      oldPaymentStatus === "Paid" &&
+      isWithinPendingWindow(oldDueDate, finalFrequency)
         ? "Pending"
-        : paymentStatus || oldPaymentStatus;
+        : oldPaymentStatus;
 
-    if (newPaymentType === "Offline") {
-      const effectiveOldStatus =
-        oldPaymentStatus === "Paid" &&
-        isWithinPendingWindow(oldDueDate, finalFrequency)
-          ? "Pending"
-          : oldPaymentStatus;
+    // PENDING -> PAID
+    if (
+      effectiveOldStatus === "Pending" &&
+      newPaymentStatus === "Paid"
+    ) {
+      const normalizedOldDueDate = normalizeDate(oldDueDate);
+      const normalizedProvidedDueDate = normalizeDate(dueDate);
 
-      if (
-        effectiveOldStatus === "Pending" &&
-        newPaymentStatus === "Paid"
-      ) {
-        const normalizedOldDueDate = normalizeDate(oldDueDate);
-        const normalizedProvidedDueDate = normalizeDate(dueDate);
+      const startingDueDate =
+        normalizedOldDueDate || normalizedProvidedDueDate;
 
-        const startingDueDate =
-          normalizedOldDueDate || normalizedProvidedDueDate;
+      if (startingDueDate) {
+        const missedPeriods = calculateMissedPeriods(
+          startingDueDate,
+          finalFrequency
+        );
 
-        if (startingDueDate) {
-          const missedPeriods = calculateMissedPeriods(
-            startingDueDate,
-            finalFrequency
-          );
+        const periodsToAdvance = Math.max(missedPeriods, 1);
 
-          const periodsToAdvance = Math.max(missedPeriods, 1);
+        customer.previousDueDate = startingDueDate;
 
-          customer.previousDueDate = startingDueDate;
-          customer.dueDate = addMonths(
-            startingDueDate,
-            getFrequencyMonths(finalFrequency) * periodsToAdvance
-          );
-        }
-
-        customer.lastPaidDate = new Date();
-      } else if (
-        effectiveOldStatus === "Paid" &&
-        newPaymentStatus === "Pending"
-      ) {
-        customer.previousDueDate = null;
-        customer.lastPaidDate = null;
-      } else if (
-        effectiveOldStatus === "Pending" &&
-        newPaymentStatus === "Pending"
-      ) {
-        if (dueDate !== undefined) {
-          customer.dueDate = dueDate || null;
-        }
-      } else if (
-        effectiveOldStatus === "Paid" &&
-        newPaymentStatus === "Paid"
-      ) {
-        if (dueDate !== undefined) {
-          customer.dueDate = dueDate || null;
-        }
-      }
-    } else {
-      if (dueDate !== undefined) {
-        customer.dueDate = dueDate || null;
+        customer.dueDate = addMonths(
+          startingDueDate,
+          getFrequencyMonths(finalFrequency) * periodsToAdvance
+        );
       }
 
+      customer.lastPaidDate = new Date();
+    }
+
+    // PAID -> PENDING
+    else if (
+      effectiveOldStatus === "Paid" &&
+      newPaymentStatus === "Pending"
+    ) {
       customer.previousDueDate = null;
       customer.lastPaidDate = null;
     }
 
+    // PENDING -> PENDING
+    else if (
+      effectiveOldStatus === "Pending" &&
+      newPaymentStatus === "Pending"
+    ) {
+      if (dueDate !== undefined) {
+        customer.dueDate = dueDate || null;
+      }
+    }
+
+    // PAID -> PAID
+    else if (
+      effectiveOldStatus === "Paid" &&
+      newPaymentStatus === "Paid"
+    ) {
+      if (dueDate !== undefined) {
+        customer.dueDate = dueDate || null;
+      }
+    }
+
+    // Update remaining customer fields.
     if (name !== undefined) customer.name = name;
     if (dob !== undefined) customer.dob = dob;
 
@@ -422,6 +456,9 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
+// ========================================
+// DELETE CUSTOMER
+// ========================================
 router.delete("/:id", auth, async (req, res) => {
   try {
     const customer = await Customer.findOneAndDelete({
@@ -447,6 +484,9 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
+// ========================================
+// DASHBOARD STATS
+// ========================================
 router.get("/stats", auth, async (req, res) => {
   try {
     const policies = await Customer.find({
